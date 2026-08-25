@@ -117,12 +117,22 @@
             object-fit: contain;
             display: block;
         }
+
+        /* Ocultar las flechas por defecto de los inputs number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
     </style>
 
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('olympusHub', () => ({
-                DATA_VERSION: '2.6',
+                DATA_VERSION: '2.7',
                 currentTab: 'table',
                 selectedJornada: '2',
                 availableJornadas: [1, 2],
@@ -151,19 +161,19 @@
                 jornadasData: {
                     1: [
                         { num: '2', passLanzados: '2 de 2', ratingQB: 100.0, pasesTD: 0, td: 1, recepcion: 1, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
-                        { num: '3', passLanzados: '1 de 2', ratingQB: 50.0, pasesTD: 1, td: 1, recepcion: 1, pasesTirados: 1, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
-                        { num: '4', passLanzados: '7 de 14', ratingQB: 50.0, pasesTD: 4, td: 1, recepcion: 1, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
-                        { num: '7', passLanzados: '0 de 1', ratingQB: 0, pasesTD: 0, td: 1, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
-                        { num: '10', passLanzados: '0 de 1', ratingQB: 0, pasesTD: 0, td: 0, recepcion: 1, pasesTirados: 2, intercepcion: 0, empepinada: 0, apresuramientoQB: 2, sacks: 1, tacleada: 0 },
+                        { num: '3', passLanzados: 2, ratingQB: 50.0, pasesTD: 1, td: 1, recepcion: 1, pasesTirados: 1, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
+                        { num: '4', passLanzados: 14, ratingQB: 50.0, pasesTD: 4, td: 1, recepcion: 1, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
+                        { num: '7', passLanzados: 1, ratingQB: 0, pasesTD: 0, td: 1, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
+                        { num: '10', passLanzados: 1, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 1, pasesTirados: 2, intercepcion: 0, empepinada: 0, apresuramientoQB: 2, sacks: 1, tacleada: 0 },
                         { num: '13', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
                         { num: '14', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 1, tacleada: 1 },
                         { num: '17', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 1, tacleada: 2 },
                         { num: '18', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
                         { num: '19', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 1, pasesTirados: 0, intercepcion: 0, empepinada: 1, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
                         { num: '24', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 2 },
-                        { num: '53', passLanzados: '0 de 1', ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
+                        { num: '53', passLanzados: 1, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
                         { num: '77', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
-                        { num: '90', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 1, tacleada: 0 }
+                        { num: '90', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 1, apresuramientoQB: 0, sacks: 1, tacleada: 0 }
                     ],
                     2: [
                         { num: '2', passLanzados: 0, ratingQB: 0, pasesTD: 0, td: 0, recepcion: 0, pasesTirados: 0, intercepcion: 0, empepinada: 0, apresuramientoQB: 0, sacks: 0, tacleada: 0 },
@@ -198,6 +208,18 @@
                         if (savedAvailable) {
                             try { this.availableJornadas = JSON.parse(savedAvailable); } catch (e) {}
                         }
+                    }
+                },
+
+                // Métodos auxiliares para incrementar y decrementar valores en la tabla de edición
+                inc(player, key) {
+                    player[key] = (Number(player[key]) || 0) + 1;
+                },
+
+                dec(player, key) {
+                    const current = Number(player[key]) || 0;
+                    if (current > 0) {
+                        player[key] = current - 1;
                     }
                 },
 
@@ -257,7 +279,7 @@
                     } else {
                         const num = parseFloat(str) || 0;
                         comp = num;
-                        att = num; // Si solo se ingresa un número, se asume 100% efectividad
+                        att = num;
                     }
 
                     if (att <= 0) return 0;
@@ -438,7 +460,7 @@
                         }
                     });
 
-                    msg += `\n⚡ *¡GLORIA AL OLYMPO!* 🏛️`;
+                    msg += `\n⚡ *¡GLORIA AL OLIMPO!* 🏛️`;
                     return msg;
                 },
 
@@ -472,12 +494,13 @@
         });
     </script>
 
-    <!-- Alpine.js script tag deferred after initialization registration -->
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-black" x-data="olympusHub">
 
+    <!-- Header -->
     <header class="border-b border-amber-500/30 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40 shadow-xl shadow-black/60">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
             
@@ -516,9 +539,10 @@
         </div>
     </header>
 
+    <!-- Banner Principal -->
     <section class="relative py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div class="dark-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border-amber-500/40">
-            <!-- Background Watermark Symbol -->
+            <!-- Background Watermark -->
             <div class="absolute -right-8 -bottom-10 opacity-20 pointer-events-none w-56 h-56 sm:w-72 sm:h-72">
                 <div class="contenedor-olympus">
                     <img src="Olympus.png" alt="Watermark" onerror="this.style.display='none'">
@@ -533,10 +557,10 @@
                     REGISTRO DE BATALLA - <span class="gold-text" x-text="selectedJornada === 'global' ? 'ACUMULADO GLOBAL' : 'JORNADA ' + selectedJornada"></span>
                 </h2>
                 <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed mb-6">
-                    Explora los números de la ofensiva y defensiva de los Dioses del Olimpo. Analiza Rating QB, MVPs, fichas individuales y comparte el resumen en WhatsApp.
+                    Explora los números de la ofensiva y defensiva de los Dioses del Olimpo. Registra tus jugadas con los botones táctiles de incremento directo, revisa MVPs y exporta reportes a WhatsApp.
                 </p>
 
-                <!-- Navigation Tabs -->
+                <!-- Pestañas de Navegación -->
                 <div class="flex flex-wrap gap-2">
                     <button @click="currentTab = 'table'" :class="currentTab === 'table' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-table text-amber-400"></i> Tabla Completa
@@ -558,9 +582,10 @@
         </div>
     </section>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex-grow">
 
+        <!-- TABLA PRINCIPAL DE LECTURA -->
         <div x-show="currentTab === 'table'" class="space-y-4" x-transition>
             
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-zinc-950 p-4 rounded-2xl border border-amber-500/20">
@@ -573,11 +598,9 @@
                 </div>
             </div>
 
-            <!-- Tabla principal -->
             <div class="overflow-x-auto dark-card rounded-2xl border border-amber-500/30 shadow-2xl">
                 <table class="w-full text-left text-xs sm:text-sm border-collapse">
                     <thead class="font-greek">
-                        <!-- Cabecera Nivel 1: División General / Ofensa / Defensa -->
                         <tr class="border-b border-zinc-800">
                             <th colspan="3" class="py-3.5 px-4 bg-zinc-950 text-left font-black text-amber-400 border-r border-zinc-800 text-xs sm:text-sm uppercase tracking-wider">
                                 <span class="gold-text" x-text="selectedJornada === 'global' ? 'VISTA: GLOBAL' : 'JORNADA: ' + selectedJornada"></span>
@@ -590,7 +613,6 @@
                             </th>
                         </tr>
 
-                        <!-- Cabecera Nivel 2: Columnas de Atributos -->
                         <tr class="border-b border-zinc-800 text-[11px] bg-zinc-900 text-zinc-200">
                             <th class="py-3 px-3 font-bold whitespace-nowrap bg-zinc-900">Jugador(a)</th>
                             <th class="py-3 px-3 font-bold whitespace-nowrap bg-zinc-900">Nombre Dios(a)</th>
@@ -616,12 +638,10 @@
                     <tbody class="divide-y divide-zinc-800/80 font-sans">
                         <template x-for="(p, index) in filteredPlayers" :key="p.num">
                             <tr :class="index % 2 === 0 ? 'bg-zinc-950/70' : 'bg-zinc-900/40'" class="hover:bg-amber-500/10 transition-colors">
-                                <!-- Datos Identificadores -->
                                 <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap" x-text="p.name"></td>
                                 <td class="py-2.5 px-3 text-zinc-300 font-medium whitespace-nowrap" x-text="p.god"></td>
                                 <td class="py-2.5 px-2 text-center font-mono font-bold text-amber-400 border-r border-zinc-800 text-sm" x-text="'#' + p.num"></td>
                                 
-                                <!-- Celdas de Ofensa -->
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.passLanzados) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.passLanzados) ? p.passLanzados : '-'"></td>
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold font-mono" :class="hasValue(p.ratingQB) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.ratingQB) ? formatRating(p.ratingQB) : '-'"></td>
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.pasesTD) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.pasesTD) ? p.pasesTD : '-'"></td>
@@ -629,7 +649,6 @@
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.recepcion) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.recepcion) ? p.recepcion : '-'"></td>
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold border-r border-zinc-800" :class="hasValue(p.pasesTirados) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.pasesTirados) ? p.pasesTirados : '-'"></td>
                                 
-                                <!-- Celdas de Defensa -->
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.intercepcion) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.intercepcion) ? p.intercepcion : '-'"></td>
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.empepinada) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.empepinada) ? p.empepinada : '-'"></td>
                                 <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.apresuramientoQB) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.apresuramientoQB) ? p.apresuramientoQB : '-'"></td>
@@ -642,6 +661,159 @@
             </div>
         </div>
 
+        <!-- TAB DE EDITOR / CAPTURA DE DATOS CON BOTONES INTERACTIVOS (+) Y (-) -->
+        <div x-show="currentTab === 'admin'" class="space-y-6" x-transition>
+            
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 dark-card p-6 rounded-2xl border-amber-500/40">
+                <div>
+                    <h3 class="font-greek text-xl font-extrabold text-amber-400" x-text="selectedJornada === 'global' ? 'VISTA GLOBAL - SOLO LECTURA' : 'EDITOR DE REGISTROS - JORNADA ' + selectedJornada"></h3>
+                    <p class="text-xs text-zinc-400 mt-0.5" x-text="selectedJornada === 'global' ? 'La vista global calcula acumulados. Selecciona una jornada específica para editar datos.' : 'Utiliza los botones + y - para sumar o restar rápidamente en la banca. El Rating QB se recalcula automáticamente.'"></p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button @click="addJornada()" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-3.5 py-2 rounded-xl text-xs hover:bg-amber-500/30 transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-plus"></i> Crear Nueva Jornada
+                    </button>
+                    <button x-show="selectedJornada !== 'global'" @click="saveToLocalStorage(); showSuccessToast = true; setTimeout(() => showSuccessToast = false, 2500)" class="gold-gradient text-black font-extrabold px-4 py-2 rounded-xl text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aviso si está en modo global -->
+            <div x-show="selectedJornada === 'global'" class="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-2xl text-xs flex items-center gap-3">
+                <i class="fa-solid fa-circle-info text-amber-400 text-lg shrink-0"></i>
+                <span>Estás viendo el <strong>Acumulado Global</strong>. Para editar los números de los partidos, selecciona una jornada en el menú desplegable superior (Ejemplo: Jornada 1).</span>
+            </div>
+
+            <!-- Feedback de guardado -->
+            <div x-show="showSuccessToast" x-transition class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> ¡Datos guardados exitosamente en el dispositivo!
+            </div>
+
+            <!-- Tabla de Edición con Botones de Incremento y Decremento -->
+            <div x-show="selectedJornada !== 'global'" class="overflow-x-auto dark-card rounded-2xl border border-zinc-800 shadow-xl">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-zinc-950 text-amber-400 uppercase font-greek">
+                        <tr class="border-b border-zinc-800 text-[11px]">
+                            <th class="py-3 px-3">#</th>
+                            <th class="py-3 px-3">Jugador</th>
+                            <th class="py-3 px-3">Dios(a)</th>
+                            <th class="py-3 px-2 text-center text-amber-300 min-w-[110px]">Pases lanzados</th>
+                            <th class="py-3 px-2 text-center text-amber-300">Rating QB</th>
+                            <th class="py-3 px-2 text-center text-amber-300">Pases TD</th>
+                            <th class="py-3 px-2 text-center text-amber-300">TD</th>
+                            <th class="py-3 px-2 text-center text-amber-300">Recepción</th>
+                            <th class="py-3 px-2 text-center text-amber-300 border-r border-zinc-800">Pases tirados</th>
+                            <th class="py-3 px-2 text-center text-amber-200">Intercepción</th>
+                            <th class="py-3 px-2 text-center text-amber-200">Empepinada</th>
+                            <th class="py-3 px-2 text-center text-amber-200">Apres. QB</th>
+                            <th class="py-3 px-2 text-center text-amber-200">Sacks</th>
+                            <th class="py-3 px-2 text-center text-amber-200">Tacleada</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800/60 font-sans">
+                        <template x-for="(p, index) in (jornadasData[selectedJornada] || [])" :key="p.num">
+                            <tr class="hover:bg-zinc-800/40 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-amber-400" x-text="'#' + p.num"></td>
+                                <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).name"></td>
+                                <td class="py-2.5 px-3 text-zinc-400 whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).god"></td>
+                                
+                                <!-- Campo de texto para Pases Lanzados (ej: 5 de 10) -->
+                                <td class="p-1">
+                                    <input type="text" x-model="p.passLanzados" placeholder="Ej: 5 de 10" class="w-24 bg-zinc-900 text-center font-semibold text-white py-1.5 rounded border border-zinc-700 focus:border-amber-500 text-xs">
+                                </td>
+                                
+                                <!-- Rating QB Automático -->
+                                <td class="p-1 text-center font-mono font-bold text-amber-400 text-xs" x-text="calcRatingQB(p.passLanzados, p.ratingQB) || '-'"></td>
+                                
+                                <!-- Pases TD con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'pasesTD')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.pasesTD" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'pasesTD')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Touchdowns con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'td')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.td" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'td')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Recepciones con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'recepcion')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.recepcion" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'recepcion')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Pases tirados con botones +/- -->
+                                <td class="p-1 border-r border-zinc-800">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'pasesTirados')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.pasesTirados" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'pasesTirados')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Intercepciones con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'intercepcion')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.intercepcion" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'intercepcion')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Empepinada con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'empepinada')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.empepinada" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'empepinada')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Apresuramiento QB con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'apresuramientoQB')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.apresuramientoQB" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'apresuramientoQB')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Sacks con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'sacks')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.sacks" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'sacks')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Tacleadas con botones +/- -->
+                                <td class="p-1">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" @click="dec(p, 'tacleada')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                        <input type="number" min="0" x-model.number="p.tacleada" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
+                                        <button type="button" @click="inc(p, 'tacleada')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB CUADRO DE HONOR (MVPS) -->
         <div x-show="currentTab === 'mvp'" class="space-y-8" x-transition>
             <div class="text-center max-w-xl mx-auto mb-6">
                 <span class="text-amber-400 font-greek text-xs tracking-widest font-extrabold uppercase">Olimpo del Partido</span>
@@ -678,7 +850,7 @@
                     </div>
                 </div>
 
-                <!-- MVP Scorer / Efficiency -->
+                <!-- MVP Scorer -->
                 <div class="dark-card rounded-3xl p-6 relative group hover:border-amber-500 transition-all duration-300">
                     <div class="absolute -top-3 right-6 bg-amber-500 text-black font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                         <i class="fa-solid fa-bullseye mr-1"></i> Precisión & Anotación
@@ -720,10 +892,6 @@
                     
                     <div class="space-y-2 border-t border-zinc-800/80 pt-4 text-xs font-semibold">
                         <div class="flex justify-between text-zinc-300">
-                            <span>Intercepciones:</span>
-                            <span class="font-bold text-red-400" x-text="mvps.defender.intercepcion || 0"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
                             <span>Sacks Realizados:</span>
                             <span class="font-bold text-red-400" x-text="mvps.defender.sacks || 0"></span>
                         </div>
@@ -740,6 +908,7 @@
             </div>
         </div>
 
+        <!-- TAB TARJETAS DIOSES -->
         <div x-show="currentTab === 'cards'" class="space-y-6" x-transition>
             <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
                 <div>
@@ -760,7 +929,6 @@
                         
                         <h4 class="font-black text-lg text-white mb-2 group-hover:text-amber-300 transition-colors" x-text="p.name"></h4>
 
-                        <!-- Badges de métricas activas -->
                         <div class="flex flex-wrap gap-1.5 text-[11px]">
                             <template x-if="hasValue(p.passLanzados)">
                                 <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 font-semibold" x-text="'Pass: ' + p.passLanzados"></span>
@@ -805,6 +973,7 @@
             </div>
         </div>
 
+        <!-- TAB RESUMEN WHATSAPP -->
         <div x-show="currentTab === 'whatsapp'" class="max-w-2xl mx-auto space-y-6" x-transition>
             <div class="dark-card rounded-3xl p-6 sm:p-8 border-amber-500/40 shadow-2xl">
                 <div class="flex items-center gap-4 mb-5 border-b border-zinc-800 pb-4">
@@ -827,83 +996,9 @@
             </div>
         </div>
 
-        <div x-show="currentTab === 'admin'" class="space-y-6" x-transition>
-            
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 dark-card p-6 rounded-2xl border-amber-500/40">
-                <div>
-                    <h3 class="font-greek text-xl font-extrabold text-amber-400" x-text="selectedJornada === 'global' ? 'VISTA GLOBAL - SOLO LECTURA' : 'EDITOR DE REGISTROS - JORNADA ' + selectedJornada"></h3>
-                    <p class="text-xs text-zinc-400 mt-0.5" x-text="selectedJornada === 'global' ? 'La vista global calcula acumulados. Selecciona una jornada específica para editar datos.' : 'Captura los números del partido. El Rating QB se calcula automáticamente según los pases lanzados (Ej: 5 de 10 = 50.0%).'"></p>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button @click="addJornada()" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-3.5 py-2 rounded-xl text-xs hover:bg-amber-500/30 transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> Crear Nueva Jornada
-                    </button>
-                    <button x-show="selectedJornada !== 'global'" @click="saveToLocalStorage(); showSuccessToast = true; setTimeout(() => showSuccessToast = false, 2500)" class="gold-gradient text-black font-extrabold px-4 py-2 rounded-xl text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-                    </button>
-                </div>
-            </div>
-
-            <!-- Warning if on global mode in editor -->
-            <div x-show="selectedJornada === 'global'" class="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-2xl text-xs flex items-center gap-3">
-                <i class="fa-solid fa-circle-info text-amber-400 text-lg shrink-0"></i>
-                <span>Estás viendo el <strong>Acumulado Global</strong>. Para editar los números de los partidos, selecciona una jornada en el menú desplegable superior (Ejemplo: Jornada 1).</span>
-            </div>
-
-            <!-- Toast feedback -->
-            <div x-show="showSuccessToast" x-transition class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
-                <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> ¡Datos guardados exitosamente en tu navegador!
-            </div>
-
-            <!-- Editor Grid -->
-            <div x-show="selectedJornada !== 'global'" class="overflow-x-auto dark-card rounded-2xl border border-zinc-800 shadow-xl">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-zinc-950 text-amber-400 uppercase font-greek">
-                        <tr class="border-b border-zinc-800 text-[11px]">
-                            <th class="py-3 px-3">#</th>
-                            <th class="py-3 px-3">Jugador</th>
-                            <th class="py-3 px-3">Dios(a)</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Pases lanzados</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Rating QB (Auto)</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Pases TD</th>
-                            <th class="py-3 px-2 text-center text-amber-300">TD</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Recepción</th>
-                            <th class="py-3 px-2 text-center text-amber-300 border-r border-zinc-800">Pases tirados</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Intercepción</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Empepinada</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Apresuramiento QB</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Sacks</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Tacleada</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-800/60 font-sans">
-                        <template x-for="(p, index) in (jornadasData[selectedJornada] || [])" :key="p.num">
-                            <tr class="hover:bg-zinc-800/40 transition">
-                                <td class="py-2 px-3 font-mono font-bold text-amber-400" x-text="'#' + p.num"></td>
-                                <td class="py-2 px-3 font-bold text-white whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).name"></td>
-                                <td class="py-2 px-3 text-zinc-400 whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).god"></td>
-                                
-                                <td class="p-1"><input type="text" x-model="p.passLanzados" placeholder="Ej: 5 de 10" class="w-20 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1 text-center font-mono font-bold text-amber-400 text-xs" x-text="calcRatingQB(p.passLanzados, p.ratingQB) || '-'"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.pasesTD" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.td" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.recepcion" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1 border-r border-zinc-800"><input type="number" x-model.number="p.pasesTirados" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                
-                                <td class="p-1"><input type="number" x-model.number="p.intercepcion" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.empepinada" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.apresuramientoQB" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.sacks" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                                <td class="p-1"><input type="number" x-model.number="p.tacleada" class="w-12 bg-zinc-900 text-center font-semibold text-white py-1 rounded border border-zinc-700 focus:border-amber-500"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </main>
 
+    <!-- Modal Ficha de Jugador -->
     <div x-show="selectedPlayer" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-transition style="display: none;">
         <div @click.away="selectedPlayer = null" class="dark-card rounded-3xl p-6 max-w-md w-full relative border-amber-500/50 shadow-2xl">
             <button @click="selectedPlayer = null" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-700">
