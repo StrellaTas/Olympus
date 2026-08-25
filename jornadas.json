@@ -1,0 +1,37 @@
+{
+  "availableJornadas": [1, 2],
+  "jornadasData": {
+    "1": [
+      { "num": "2", "passLanzados": "2 de 2", "ratingQB": 100.0, "pasesTD": 0, "td": 1, "recepcion": 1, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "3", "passLanzados": "1 de 2", "ratingQB": 50.0, "pasesTD": 1, "td": 1, "recepcion": 1, "pasesTirados": 1, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "4", "passLanzados": "7 de 14", "ratingQB": 50.0, "pasesTD": 4, "td": 1, "recepcion": 1, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "7", "passLanzados": "0 de 1", "ratingQB": 0, "pasesTD": 0, "td": 1, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "10", "passLanzados": "0 de 1", "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 1, "pasesTirados": 2, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 2, "sacks": 1, "tacleada": 0 },
+      { "num": "13", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "14", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 1, "tacleada": 1 },
+      { "num": "17", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 1, "tacleada": 2 },
+      { "num": "18", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "19", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 1, "pasesTirados": 0, "intercepcion": 0, "empepinada": 1, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "24", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 2 },
+      { "num": "53", "passLanzados": "0 de 1", "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "77", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "90", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 1, "apresuramientoQB": 0, "sacks": 1, "tacleada": 0 }
+    ],
+    "2": [
+      { "num": "2", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "3", "passLanzados": "2 de 6", "ratingQB": 0.333, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "4", "passLanzados": "5 de 10", "ratingQB": 0.500, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "7", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "10", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 1, "pasesTirados": 1, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 3 },
+      { "num": "13", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 1, "intercepcion": 1, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "14", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 1, "sacks": 0, "tacleada": 2 },
+      { "num": "17", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 2 },
+      { "num": "18", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 1, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 2 },
+      { "num": "19", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "24", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 1, "recepcion": 0, "pasesTirados": 0, "intercepcion": 1, "empepinada": 2, "apresuramientoQB": 0, "sacks": 0, "tacleada": 1 },
+      { "num": "53", "passLanzados": "2 de 4", "ratingQB": 0.500, "pasesTD": 0, "td": 1, "recepcion": 5, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "77", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 0, "empepinada": 0, "apresuramientoQB": 0, "sacks": 0, "tacleada": 0 },
+      { "num": "90", "passLanzados": 0, "ratingQB": 0, "pasesTD": 0, "td": 0, "recepcion": 0, "pasesTirados": 0, "intercepcion": 1, "empepinada": 1, "apresuramientoQB": 0, "sacks": 0, "tacleada": 3 }
+    ]
+  }
+}
