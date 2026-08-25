@@ -230,6 +230,56 @@
                     location.reload();
                 },
 
+                getComp(p) {
+                    if (p.passComp !== undefined) return Number(p.passComp) || 0;
+                    if (!p.passLanzados) return 0;
+                    const str = String(p.passLanzados);
+                    if (str.includes('de')) return parseInt(str.split('de')[0]) || 0;
+                    if (str.includes('/')) return parseInt(str.split('/')[0]) || 0;
+                    return parseInt(str) || 0;
+                },
+
+                getAtt(p) {
+                    if (p.passAtt !== undefined) return Number(p.passAtt) || 0;
+                    if (!p.passLanzados) return 0;
+                    const str = String(p.passLanzados);
+                    if (str.includes('de')) return parseInt(str.split('de')[1]) || 0;
+                    if (str.includes('/')) return parseInt(str.split('/')[1]) || 0;
+                    return parseInt(str) || 0;
+                },
+
+                incComp(p) {
+                    let comp = this.getComp(p) + 1;
+                    let att = Math.max(this.getAtt(p), comp);
+                    p.passComp = comp;
+                    p.passAtt = att;
+                    p.passLanzados = `${comp} de ${att}`;
+                },
+
+                decComp(p) {
+                    let comp = Math.max(0, this.getComp(p) - 1);
+                    let att = this.getAtt(p);
+                    p.passComp = comp;
+                    p.passAtt = att;
+                    p.passLanzados = att > 0 ? `${comp} de ${att}` : 0;
+                },
+
+                incAtt(p) {
+                    let comp = this.getComp(p);
+                    let att = this.getAtt(p) + 1;
+                    p.passComp = comp;
+                    p.passAtt = att;
+                    p.passLanzados = `${comp} de ${att}`;
+                },
+
+                decAtt(p) {
+                    let comp = this.getComp(p);
+                    let att = Math.max(comp, this.getAtt(p) - 1);
+                    p.passComp = comp;
+                    p.passAtt = att;
+                    p.passLanzados = att > 0 ? `${comp} de ${att}` : 0;
+                },
+
                 saveToLocalStorage() {
                     localStorage.setItem('olympus_jornadasData', JSON.stringify(this.jornadasData));
                     localStorage.setItem('olympus_availableJornadas', JSON.stringify(this.availableJornadas));
@@ -243,6 +293,8 @@
                     this.jornadasData[nextJornada] = this.roster.map(player => ({
                         num: player.num,
                         passLanzados: 0,
+                        passComp: 0,
+                        passAtt: 0,
                         ratingQB: 0,
                         pasesTD: 0,
                         td: 0,
@@ -698,7 +750,7 @@
                             <th class="py-3 px-3">#</th>
                             <th class="py-3 px-3">Jugador</th>
                             <th class="py-3 px-3">Dios(a)</th>
-                            <th class="py-3 px-2 text-center text-amber-300 min-w-[110px]">Pases lanzados</th>
+                            <th class="py-3 px-2 text-center text-amber-300 min-w-[140px]">Pases (Comp / Tot)</th>
                             <th class="py-3 px-2 text-center text-amber-300">Rating QB</th>
                             <th class="py-3 px-2 text-center text-amber-300">Pases TD</th>
                             <th class="py-3 px-2 text-center text-amber-300">TD</th>
@@ -718,9 +770,24 @@
                                 <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).name"></td>
                                 <td class="py-2.5 px-3 text-zinc-400 whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).god"></td>
                                 
-                                <!-- Campo de texto para Pases Lanzados (ej: 5 de 10) -->
-                                <td class="p-1">
-                                    <input type="text" x-model="p.passLanzados" placeholder="Ej: 5 de 10" class="w-24 bg-zinc-900 text-center font-semibold text-white py-1.5 rounded border border-zinc-700 focus:border-amber-500 text-xs">
+                                <!-- Controles interactivos +/- para Pases Completados e Intentados -->
+                                <td class="p-1 min-w-[140px]">
+                                    <div class="flex flex-col gap-1 items-center justify-center py-1">
+                                        <!-- Completados -->
+                                        <div class="flex items-center" title="Pases Completados">
+                                            <span class="text-[10px] font-bold text-amber-400/90 mr-1.5 w-8 text-right font-greek">Comp:</span>
+                                            <button type="button" @click="decComp(p)" class="w-6 h-6 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-xs border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                            <span class="w-8 bg-zinc-900 text-center font-bold text-amber-300 text-xs py-0.5 border-y border-zinc-700 font-mono" x-text="getComp(p)"></span>
+                                            <button type="button" @click="incComp(p)" class="w-6 h-6 rounded-r gold-gradient text-black font-extrabold text-xs flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                        </div>
+                                        <!-- Intentados Totales -->
+                                        <div class="flex items-center" title="Pases Intentados Totales">
+                                            <span class="text-[10px] font-bold text-zinc-400 mr-1.5 w-8 text-right font-greek">Tot:</span>
+                                            <button type="button" @click="decAtt(p)" class="w-6 h-6 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-xs border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
+                                            <span class="w-8 bg-zinc-900 text-center font-bold text-white text-xs py-0.5 border-y border-zinc-700 font-mono" x-text="getAtt(p)"></span>
+                                            <button type="button" @click="incAtt(p)" class="w-6 h-6 rounded-r gold-gradient text-black font-extrabold text-xs flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
+                                        </div>
+                                    </div>
                                 </td>
                                 
                                 <!-- Rating QB Automático -->
