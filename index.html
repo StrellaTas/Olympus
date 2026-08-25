@@ -132,9 +132,9 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('olympusHub', () => ({
-                DATA_VERSION: '2.7',
+                DATA_VERSION: '2.8',
                 currentTab: 'table',
-                selectedJornada: '2',
+                selectedJornada: 'global', // Establecido por defecto en Global
                 availableJornadas: [1, 2],
                 searchQuery: '',
                 showSuccessToast: false,
@@ -477,7 +477,7 @@
                     })[0] || players[0];
 
                     const scorer = [...players].sort((a, b) => (b.td * 10 + b.recepcion) - (a.td * 10 + a.recepcion))[0] || players[0];
-                    const defender = [...players].sort((a, b) => (b.sacks * 3 + b.intercepcion * 3 + b.tacleada) - (a.sacks * 3 + a.intercepcion * 3 + a.tacleada))[0] || players[0];
+                    const defender = [...players].sort((a, b) => (b.intercepcion * 4 + b.sacks * 3 + b.tacleada * 1 + b.apresuramientoQB * 1) - (a.intercepcion * 4 + a.sacks * 3 + a.tacleada * 1 + a.apresuramientoQB * 1))[0] || players[0];
 
                     return { passer, scorer, defender };
                 },
@@ -493,7 +493,7 @@
                     msg += `👑 *CUADRO DE HONOR (MVPs)*\n`;
                     msg += `🏈 *Líder de Pase:* ${mvps.passer.name || 'N/A'} (#${mvps.passer.num}) - ${mvps.passer.pasesTD || 0} TDs de Pase, Rating QB: ${this.formatRating(mvps.passer.ratingQB)}\n`;
                     msg += `🎯 *Anotador Principal:* ${mvps.scorer.name || 'N/A'} (#${mvps.scorer.num}) - ${mvps.scorer.td || 0} TDs, ${mvps.scorer.recepcion || 0} Rec.\n`;
-                    msg += `🛡️ *Muralla Defensiva:* ${mvps.defender.name || 'N/A'} (#${mvps.defender.num}) - ${mvps.defender.sacks || 0} Sacks, ${mvps.defender.intercepcion || 0} INTs, ${mvps.defender.tacleada || 0} Tackles\n\n`;
+                    msg += `🛡️ *Muralla Defensiva:* ${mvps.defender.name || 'N/A'} (#${mvps.defender.num}) - ${mvps.defender.intercepcion || 0} INTs, ${mvps.defender.sacks || 0} Sacks, ${mvps.defender.tacleada || 0} Tackles\n\n`;
 
                     msg += `📊 *DESTACADOS DEL EQUIPO*\n`;
                     this.currentPlayers.forEach(p => {
@@ -505,8 +505,8 @@
                             if (p.pasesTD) stats.push(`${p.pasesTD} Pases TD`);
                             if (p.td) stats.push(`${p.td} TD`);
                             if (p.recepcion) stats.push(`${p.recepcion} Rec`);
-                            if (p.sacks) stats.push(`${p.sacks} Sacks`);
                             if (p.intercepcion) stats.push(`${p.intercepcion} INT`);
+                            if (p.sacks) stats.push(`${p.sacks} Sacks`);
                             if (p.tacleada) stats.push(`${p.tacleada} Tackles`);
                             msg += line + stats.join(' | ') + `\n`;
                         }
@@ -959,20 +959,16 @@
                     
                     <div class="space-y-2 border-t border-zinc-800/80 pt-4 text-xs font-semibold">
                         <div class="flex justify-between text-zinc-300">
-                            <span>Intercepciones:</span>
-                            <span class="font-bold text-red-400" x-text="mvps.defender.intercepcion || 0"></span>
-                        </div>                        
+                            <span>Intercepciones (INT):</span>
+                            <span class="font-bold text-purple-400" x-text="(mvps.defender.intercepcion || 0) + ' INT'"></span>
+                        </div>
                         <div class="flex justify-between text-zinc-300">
                             <span>Sacks Realizados:</span>
-                            <span class="font-bold text-red-400" x-text="mvps.defender.sacks || 0"></span>
+                            <span class="font-bold text-red-400" x-text="(mvps.defender.sacks || 0) + ' Sacks'"></span>
                         </div>
                         <div class="flex justify-between text-zinc-300">
-                            <span>Apresuramientos QB:</span>
-                            <span class="font-bold text-amber-400" x-text="mvps.defender.apresuramientoQB || 0"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Tacleadas / Intercepción:</span>
-                            <span class="font-bold text-blue-400" x-text="(mvps.defender.tacleada || 0) + ' / ' + (mvps.defender.intercepcion || 0)"></span>
+                            <span>Tacleadas / Apres. QB:</span>
+                            <span class="font-bold text-blue-400" x-text="(mvps.defender.tacleada || 0) + ' / ' + (mvps.defender.apresuramientoQB || 0)"></span>
                         </div>
                     </div>
                 </div>
