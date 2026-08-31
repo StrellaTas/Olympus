@@ -687,6 +687,9 @@
                 <button @click="currentTab = 'mvp'" :class="currentTab === 'mvp' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
                     <i class="fa-solid fa-trophy"></i> Cuadro de Honor
                 </button>
+                <button @click="currentTab = 'cards'" :class="currentTab === 'cards' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-users"></i> Tarjetas Dioses
+                </button>
                 <button @click="currentTab = 'edit'" :class="currentTab === 'edit' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
                     <i class="fa-solid fa-pen-to-square"></i> Cargar / Editar Datos
                 </button>
@@ -812,6 +815,71 @@
                     <div class="flex justify-between"><span class="text-zinc-400">Tackles:</span> <span class="font-bold text-white" x-text="mvps.defender.tacleada || 0"></span></div>
                     <div class="flex justify-between"><span class="text-zinc-400">Apresuramientos QB:</span> <span class="font-bold text-white" x-text="mvps.defender.apresuramientoQB || 0"></span></div>
                 </div>
+            </div>
+        </div>
+        
+    <!-- VISTA 3: TARJETA DIOSES -->
+        <div x-show="currentTab === 'cards'" class="space-y-6" x-transition>
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
+                <div>
+                    <h3 class="font-greek text-xl font-bold text-amber-400">ROSTER TEAM OLYMPUS</h3>
+                    <p class="text-xs text-zinc-400">Haz clic en la tarjeta de un jugador para ver su reporte detallado</p>
+                </div>
+                <input type="text" x-model="searchQuery" placeholder="Buscar dios o jugador..." class="bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 rounded-xl px-4 py-2 w-full sm:w-64 focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <template x-for="p in filteredPlayers" :key="p.num">
+                    <div class="dark-card rounded-2xl p-5 hover:border-amber-500 transition-all duration-200 cursor-pointer relative overflow-hidden group" @click="selectedPlayer = p">
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-mono font-extrabold text-amber-400 text-base group-hover:bg-amber-500 group-hover:text-black transition-colors" x-text="'#' + p.num"></span>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 font-greek font-bold" x-text="p.god"></span>
+                        </div>
+                        
+                        <h4 class="font-black text-lg text-white mb-2 group-hover:text-amber-300 transition-colors" x-text="p.name"></h4>
+
+                        <div class="flex flex-wrap gap-1.5 text-[11px]">
+                            <template x-if="hasValue(p.passLanzados)">
+                                <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 font-semibold" x-text="'Pass: ' + p.passLanzados"></span>
+                            </template>
+                            <template x-if="hasValue(p.ratingQB)">
+                                <span class="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-md border border-yellow-500/30 font-semibold" x-text="'Rating QB: ' + formatRating(p.ratingQB)"></span>
+                            </template>
+                            <template x-if="hasValue(p.pasesTD)">
+                                <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 font-semibold" x-text="'Pases TD: ' + p.pasesTD"></span>
+                            </template>
+                            <template x-if="hasValue(p.td)">
+                                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30 font-semibold" x-text="'TD: ' + p.td"></span>
+                            </template>
+                            <template x-if="hasValue(p.recepcion)">
+                                <span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-md border border-teal-500/30 font-semibold" x-text="'Rec: ' + p.recepcion"></span>
+                            </template>
+                            <template x-if="hasValue(p.pasesTirados)">
+                                <span class="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-md border border-zinc-700 font-semibold" x-text="'P. Tirados: ' + p.pasesTirados"></span>
+                            </template>
+                            <template x-if="hasValue(p.intercepcion)">
+                                <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-md border border-purple-500/30 font-semibold" x-text="'INT: ' + p.intercepcion"></span>
+                            </template>
+                            <template x-if="hasValue(p.empepinada)">
+                                <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-500/30 font-semibold" x-text="'Empepinada: ' + p.empepinada"></span>
+                            </template>
+                            <template x-if="hasValue(p.apresuramientoQB)">
+                                <span class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-md border border-orange-500/30 font-semibold" x-text="'Apres. QB: ' + p.apresuramientoQB"></span>
+                            </template>
+                            <template x-if="hasValue(p.sacks)">
+                                <span class="bg-red-500/20 text-red-300 px-2 py-0.5 rounded-md border border-red-500/30 font-semibold" x-text="'Sacks: ' + p.sacks"></span>
+                            </template>
+                            <template x-if="hasValue(p.tacleada)">
+                                <span class="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-md border border-blue-500/30 font-semibold" x-text="'Tackles: ' + p.tacleada"></span>
+                            </template>
+
+                            <template x-if="!hasAnyStat(p)">
+                                <span class="text-zinc-500 italic text-xs py-0.5">Sin registros</span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
 
