@@ -726,15 +726,16 @@
                                 <th class="py-2 px-3 text-left border-r border-zinc-800">Dios</th>
                                 
                                 <!-- Ofensa -->
-                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Pass</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Pases Lanzados</th>
                                 <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Rating QB</th>
                                 <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Pass TD</th>
                                 <th class="py-2 px-2 bg-amber-500/10 text-amber-300">TD</th>
-                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300 border-r border-zinc-800">Rec</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Recepciones</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300 border-r border-zinc-800">Pases Tirados</th>
                                 
                                 <!-- Defensa -->
-                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Pass Tirados</th>
-                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">INT</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Intercepciones</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Empepinadas</th>
                                 <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Apres. QB</th>
                                 <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Sacks</th>
                                 <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Tacleada</th>
@@ -753,10 +754,11 @@
                                     <td class="py-2.5 px-2 text-center" :class="p.pasesTD > 0 ? 'stat-highlight' : ''" x-text="p.pasesTD || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.td > 0 ? 'stat-highlight' : ''" x-text="p.td || 0"></td>
                                     <td class="py-2.5 px-2 text-center border-r border-zinc-800/60" :class="p.recepcion > 0 ? 'stat-highlight' : ''" x-text="p.recepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.pasesTirados || 0"></td>
                                     
                                     <!-- Defensa -->
-                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.pasesTirados || 0"></td>
-                                    <td class="py-2.5 px-2 text-center" :class="p.intercepcion > 0 ? 'stat-highlight' : ''" x-text="p.intercepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.intercepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.intercepcion > 0 ? 'stat-highlight' : ''" x-text="p.empepinada || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.apresuramientoQB > 0 ? 'stat-highlight' : ''" x-text="p.apresuramientoQB || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.sacks > 0 ? 'stat-highlight' : ''" x-text="p.sacks || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.tacleada > 0 ? 'stat-highlight' : ''" x-text="p.tacleada || 0"></td>
@@ -837,6 +839,7 @@
                                 <th class="py-2 px-2">Rec</th>
                                 <th class="py-2 px-2">Pases Tirados</th>
                                 <th class="py-2 px-2">INT</th>
+                                <th class="py-2 px-2">Empepinada</th>
                                 <th class="py-2 px-2">Apres. QB</th>
                                 <th class="py-2 px-2">Sacks</th>
                                 <th class="py-2 px-2">Tacleada</th>
