@@ -16,6 +16,38 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Firebase SDKs (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // -----------------------------------------------------------------
+        // ⚙️ CONFIGURACIÓN DE FIREBASE
+        // Reemplaza los datos entre comillas con las credenciales de tu proyecto en Firebase Console
+        // -----------------------------------------------------------------
+        const firebaseConfig = {
+          apiKey: "AIzaSyAKkPPSTv6ID6dnjaVLMQ7BA7MRWJrFT2U",
+          authDomain: "flag-statistics-marmong.firebaseapp.com",
+          databaseURL: "https://flag-statistics-marmong-default-rtdb.firebaseio.com",
+          projectId: "flag-statistics-marmong",
+          storageBucket: "flag-statistics-marmong.firebasestorage.app",
+          messagingSenderId: "245195884000",
+          appId: "1:245195884000:web:26af4769aa55c84e2fd785",
+          measurementId: "G-7H10T4HJT8"
+        };
+
+        // Inicializar Firebase
+        let db = null;
+        try {
+            if (firebaseConfig.apiKey !== "AIzaSyAKkPPSTv6ID6dnjaVLMQ7BA7MRWJrFT2U" ) {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.error("Error al inicializar Firebase:", e);
+        }
+    </script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -132,7 +164,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('olympusHub', () => ({
-                DATA_VERSION: '2.8',
+                DATA_VERSION: '3.0',
                 currentTab: 'table',
                 selectedJornada: 'global', // Establecido por defecto en Global
                 availableJornadas: [1, 2],
@@ -140,6 +172,9 @@
                 showSuccessToast: false,
                 copied: false,
                 selectedPlayer: null,
+                
+                // 🔑 PIN de seguridad para que únicamente los coaches editen/añadan jornadas
+                coachPin: '1234', 
 
                 roster: [
                     { num: '2', name: 'Thamara', god: 'Hécate' },
@@ -194,12 +229,20 @@
                 },
 
                 init() {
-                    const savedVersion = localStorage.getItem('olympus_data_version');
-                    if (savedVersion !== this.DATA_VERSION) {
-                        localStorage.removeItem('olympus_jornadasData');
-                        localStorage.removeItem('olympus_availableJornadas');
-                        localStorage.setItem('olympus_data_version', this.DATA_VERSION);
+                    // Escuchar cambios en la base de datos de Firebase en tiempo real
+                    if (db) {
+                        db.ref('olympus_stats').on('value', (snapshot) => {
+                            const data = snapshot.val();
+                            if (data) {
+                                if (data.jornadasData) this.jornadasData = data.jornadasData;
+                                if (data.availableJornadas) this.availableJornadas = data.availableJornadas;
+                            } else {
+                                // Guardar estado inicial si la base de datos está vacía
+                                this.saveToFirebase(false);
+                            }
+                        });
                     } else {
+                        // Fallback a LocalStorage si Firebase aún no está configurado
                         const savedJornadas = localStorage.getItem('olympus_jornadasData');
                         const savedAvailable = localStorage.getItem('olympus_availableJornadas');
                         if (savedJornadas) {
@@ -209,6 +252,82 @@
                             try { this.availableJornadas = JSON.parse(savedAvailable); } catch (e) {}
                         }
                     }
+                },
+
+                // Verifica la clave ingresada por el Coach antes de permitir escrituras
+                verifyCoachPIN() {
+                    const pinInput = prompt("🔑 Ingresa el PIN de Coach para realizar cambios:");
+                    if (pinInput === this.coachPin) {
+                        return true;
+                    } else if (pinInput !== null) {
+                        alert("❌ PIN incorrecto. No tienes permiso para editar.");
+                    }
+                    return false;
+                },
+
+                // Guardar en la nube (Firebase)
+                saveToFirebase(showToast = true) {
+                    if (db) {
+                        db.ref('olympus_stats').set({
+                            jornadasData: this.jornadasData,
+                            availableJornadas: this.availableJornadas
+                        }).then(() => {
+                            if (showToast) {
+                                this.showSuccessToast = true;
+                                setTimeout(() => { this.showSuccessToast = false; }, 3000);
+                            }
+                        }).catch((error) => {
+                            console.error("Error al guardar en Firebase:", error);
+                            alert("Error al conectar con la base de datos en la nube.");
+                        });
+                    } else {
+                        // Fallback a LocalStorage
+                        this.saveToLocalStorage();
+                        if (showToast) {
+                            this.showSuccessToast = true;
+                            setTimeout(() => { this.showSuccessToast = false; }, 3000);
+                        }
+                    }
+                },
+
+                saveToLocalStorage() {
+                    localStorage.setItem('olympus_jornadasData', JSON.stringify(this.jornadasData));
+                    localStorage.setItem('olympus_availableJornadas', JSON.stringify(this.availableJornadas));
+                },
+
+                // Solicita el PIN antes de permitir guardar cambios de una jornada
+                guardarCambiosCoach() {
+                    if (this.verifyCoachPIN()) {
+                        this.saveToFirebase(true);
+                    }
+                },
+
+                // Solicita el PIN antes de crear una nueva jornada
+                addJornada() {
+                    if (!this.verifyCoachPIN()) return;
+
+                    const nextJornada = this.availableJornadas.length > 0 ? Math.max(...this.availableJornadas) + 1 : 1;
+                    this.availableJornadas.push(nextJornada);
+                    
+                    this.jornadasData[nextJornada] = this.roster.map(player => ({
+                        num: player.num,
+                        passLanzados: 0,
+                        passComp: 0,
+                        passAtt: 0,
+                        ratingQB: 0,
+                        pasesTD: 0,
+                        td: 0,
+                        recepcion: 0,
+                        pasesTirados: 0,
+                        intercepcion: 0,
+                        empepinada: 0,
+                        apresuramientoQB: 0,
+                        sacks: 0,
+                        tacleada: 0
+                    }));
+
+                    this.selectedJornada = String(nextJornada);
+                    this.saveToFirebase(true);
                 },
 
                 // Métodos auxiliares para incrementar y decrementar valores en la tabla de edición
@@ -221,13 +340,6 @@
                     if (current > 0) {
                         player[key] = current - 1;
                     }
-                },
-
-                resetData() {
-                    localStorage.removeItem('olympus_jornadasData');
-                    localStorage.removeItem('olympus_availableJornadas');
-                    localStorage.removeItem('olympus_data_version');
-                    location.reload();
                 },
 
                 getComp(p) {
@@ -278,37 +390,6 @@
                     p.passComp = comp;
                     p.passAtt = att;
                     p.passLanzados = att > 0 ? `${comp} de ${att}` : 0;
-                },
-
-                saveToLocalStorage() {
-                    localStorage.setItem('olympus_jornadasData', JSON.stringify(this.jornadasData));
-                    localStorage.setItem('olympus_availableJornadas', JSON.stringify(this.availableJornadas));
-                    localStorage.setItem('olympus_data_version', this.DATA_VERSION);
-                },
-
-                addJornada() {
-                    const nextJornada = this.availableJornadas.length > 0 ? Math.max(...this.availableJornadas) + 1 : 1;
-                    this.availableJornadas.push(nextJornada);
-                    
-                    this.jornadasData[nextJornada] = this.roster.map(player => ({
-                        num: player.num,
-                        passLanzados: 0,
-                        passComp: 0,
-                        passAtt: 0,
-                        ratingQB: 0,
-                        pasesTD: 0,
-                        td: 0,
-                        recepcion: 0,
-                        pasesTirados: 0,
-                        intercepcion: 0,
-                        empepinada: 0,
-                        apresuramientoQB: 0,
-                        sacks: 0,
-                        tacleada: 0
-                    }));
-
-                    this.selectedJornada = String(nextJornada);
-                    this.saveToLocalStorage();
                 },
 
                 calcRatingQB(passLanzados, manualRating = 0) {
@@ -580,555 +661,239 @@
                         <option :value="String(j)" x-text="'Jornada ' + j" class="bg-zinc-900 text-white"></option>
                     </template>
                 </select>
-                <button @click="addJornada()" class="gold-gradient text-black font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Nueva Jornada</span>
-                </button>
-                <button @click="resetData()" title="Restablecer todos los datos oficiales originales" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer">
-                    <i class="fa-solid fa-rotate-left text-amber-400"></i>
-                    <span class="hidden md:inline">Restablecer</span>
+                
+                <button @click="addJornada()" class="gold-gradient text-black font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> Nueva Jornada
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Banner Principal -->
-    <section class="relative py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div class="dark-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border-amber-500/40">
-            <!-- Background Watermark -->
-            <div class="absolute -right-8 -bottom-10 opacity-20 pointer-events-none w-56 h-56 sm:w-72 sm:h-72">
-                <div class="contenedor-olympus">
-                    <img src="Olympus.png" alt="Watermark" onerror="this.style.display='none'">
-                </div>
-            </div>
-            
-            <div class="max-w-3xl relative z-10">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 mb-3 shadow-inner">
-                    <i class="fa-solid fa-trophy text-amber-400"></i> Flag Football League • Reporte Oficial
-                </div>
-                <h2 class="font-greek text-3xl sm:text-4xl font-black text-white tracking-wide mb-2">
-                    REGISTRO DE BATALLA - <span class="gold-text" x-text="selectedJornada === 'global' ? 'ACUMULADO GLOBAL' : 'JORNADA ' + selectedJornada"></span>
-                </h2>
-                <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed mb-6">
-                    Explora los números de la ofensiva y defensiva de los Dioses del Olimpo. Registra tus jugadas con los botones táctiles de incremento directo, revisa MVPs y exporta reportes a WhatsApp.
-                </p>
+    <!-- Notificación Flotante (Toast) -->
+    <div x-show="showSuccessToast" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" class="fixed bottom-5 right-5 z-50 bg-amber-500 text-black font-bold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-amber-300">
+        <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+        <span>¡Estadísticas guardadas y sincronizadas en la nube!</span>
+    </div>
 
-                <!-- Pestañas de Navegación -->
-                <div class="flex flex-wrap gap-2">
-                    <button @click="currentTab = 'table'" :class="currentTab === 'table' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-table text-amber-400"></i> Tabla Completa
-                    </button>
-                    <button @click="currentTab = 'mvp'" :class="currentTab === 'mvp' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-crown text-amber-400"></i> Cuadro de Honor
-                    </button>
-                    <button @click="currentTab = 'cards'" :class="currentTab === 'cards' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-users text-amber-400"></i> Tarjetas Dioses
-                    </button>
-                    <button @click="currentTab = 'whatsapp'" :class="currentTab === 'whatsapp' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
-                        <i class="fa-brands fa-whatsapp text-emerald-400"></i> Compartir
-                    </button>
-                    <button @click="currentTab = 'admin'" :class="currentTab === 'admin' ? 'gold-gradient text-black font-extrabold shadow-lg shadow-amber-500/20' : 'bg-zinc-900/90 text-amber-400 border border-amber-500/40 hover:bg-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-pen-to-square"></i> Cargar / Editar Datos
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex-grow">
-
-        <!-- TABLA PRINCIPAL DE LECTURA -->
-        <div x-show="currentTab === 'table'" class="space-y-4" x-transition>
-            
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-zinc-950 p-4 rounded-2xl border border-amber-500/20">
-                <div>
-                    <h3 class="font-greek text-xl font-black text-amber-400 tracking-wide" x-text="selectedJornada === 'global' ? 'ESTADÍSTICAS GLOBALES ACUMULADAS DE LA TEMPORADA' : 'ESTADÍSTICAS OFICIALES - JORNADA ' + selectedJornada"></h3>
-                    <p class="text-xs text-zinc-400" x-text="selectedJornada === 'global' ? 'Totales acumulados sumando todas las jornadas agregadas' : 'Celdas amarillas resaltan los logros obtenidos en el campo'"></p>
-                </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <input type="text" x-model="searchQuery" placeholder="Filtrar por nombre o dios..." class="bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 rounded-xl px-3 py-2 w-full sm:w-48 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
-
-            <div class="overflow-x-auto dark-card rounded-2xl border border-amber-500/30 shadow-2xl">
-                <table class="w-full text-left text-xs sm:text-sm border-collapse">
-                    <thead class="font-greek">
-                        <tr class="border-b border-zinc-800">
-                            <th colspan="3" class="py-3.5 px-4 bg-zinc-950 text-left font-black text-amber-400 border-r border-zinc-800 text-xs sm:text-sm uppercase tracking-wider">
-                                <span class="gold-text" x-text="selectedJornada === 'global' ? 'VISTA: GLOBAL' : 'JORNADA: ' + selectedJornada"></span>
-                            </th>
-                            <th colspan="6" class="py-3.5 px-3 th-offense text-center font-black text-xs sm:text-sm uppercase border-r border-amber-600 shadow-md">
-                                <i class="fa-solid fa-football mr-1.5"></i> OFENSA
-                            </th>
-                            <th colspan="5" class="py-3.5 px-3 th-defense text-center font-black text-xs sm:text-sm uppercase shadow-md">
-                                <i class="fa-solid fa-shield-halved mr-1.5"></i> DEFENSA
-                            </th>
-                        </tr>
-
-                        <tr class="border-b border-zinc-800 text-[11px] bg-zinc-900 text-zinc-200">
-                            <th class="py-3 px-3 font-bold whitespace-nowrap bg-zinc-900">Jugador(a)</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap bg-zinc-900">Nombre Dios(a)</th>
-                            <th class="py-3 px-2 font-bold text-center bg-zinc-900 border-r border-zinc-800">Número</th>
-                            
-                            <!-- Columnas Ofensa -->
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 whitespace-nowrap">Pases lanzados</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 whitespace-nowrap">Rating QB</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 whitespace-nowrap">Pases TD</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 whitespace-nowrap">TD</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 whitespace-nowrap">Recepción</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-300 border-b-2 border-amber-500/50 border-r border-amber-500/30 whitespace-nowrap">Pases tirados</th>
-                            
-                            <!-- Columnas Defensa -->
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-200 border-b-2 border-amber-600/50 whitespace-nowrap">Intercepción</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-200 border-b-2 border-amber-600/50 whitespace-nowrap">Empepinada</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-200 border-b-2 border-amber-600/50 whitespace-nowrap">Apresuramiento QB</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-200 border-b-2 border-amber-600/50 whitespace-nowrap">Sacks</th>
-                            <th class="py-3 px-2 text-center font-extrabold bg-zinc-900 text-amber-200 border-b-2 border-amber-600/50 whitespace-nowrap">Tacleada</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-zinc-800/80 font-sans">
-                        <template x-for="(p, index) in filteredPlayers" :key="p.num">
-                            <tr :class="index % 2 === 0 ? 'bg-zinc-950/70' : 'bg-zinc-900/40'" class="hover:bg-amber-500/10 transition-colors">
-                                <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap" x-text="p.name"></td>
-                                <td class="py-2.5 px-3 text-zinc-300 font-medium whitespace-nowrap" x-text="p.god"></td>
-                                <td class="py-2.5 px-2 text-center font-mono font-bold text-amber-400 border-r border-zinc-800 text-sm" x-text="'#' + p.num"></td>
-                                
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.passLanzados) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.passLanzados) ? p.passLanzados : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold font-mono" :class="hasValue(p.ratingQB) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.ratingQB) ? formatRating(p.ratingQB) : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.pasesTD) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.pasesTD) ? p.pasesTD : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.td) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.td) ? p.td : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.recepcion) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.recepcion) ? p.recepcion : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold border-r border-zinc-800" :class="hasValue(p.pasesTirados) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.pasesTirados) ? p.pasesTirados : '-'"></td>
-                                
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.intercepcion) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.intercepcion) ? p.intercepcion : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.empepinada) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.empepinada) ? p.empepinada : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.apresuramientoQB) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.apresuramientoQB) ? p.apresuramientoQB : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.sacks) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.sacks) ? p.sacks : '-'"></td>
-                                <td class="py-2.5 px-2 text-center text-xs font-semibold" :class="hasValue(p.tacleada) ? 'stat-highlight' : 'text-zinc-600'" x-text="hasValue(p.tacleada) ? p.tacleada : '-'"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- TAB DE EDITOR / CAPTURA DE DATOS CON BOTONES INTERACTIVOS (+) Y (-) -->
-        <div x-show="currentTab === 'admin'" class="space-y-6" x-transition>
-            
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 dark-card p-6 rounded-2xl border-amber-500/40">
-                <div>
-                    <h3 class="font-greek text-xl font-extrabold text-amber-400" x-text="selectedJornada === 'global' ? 'VISTA GLOBAL - SOLO LECTURA' : 'EDITOR DE REGISTROS - JORNADA ' + selectedJornada"></h3>
-                    <p class="text-xs text-zinc-400 mt-0.5" x-text="selectedJornada === 'global' ? 'La vista global calcula acumulados. Selecciona una jornada específica para editar datos.' : 'Utiliza los botones + y - para sumar o restar rápidamente en la banca. El Rating QB se recalcula automáticamente.'"></p>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button @click="addJornada()" class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-3.5 py-2 rounded-xl text-xs hover:bg-amber-500/30 transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> Crear Nueva Jornada
-                    </button>
-                    <button x-show="selectedJornada !== 'global'" @click="saveToLocalStorage(); showSuccessToast = true; setTimeout(() => showSuccessToast = false, 2500)" class="gold-gradient text-black font-extrabold px-4 py-2 rounded-xl text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-                    </button>
-                </div>
-            </div>
-
-            <!-- Aviso si está en modo global -->
-            <div x-show="selectedJornada === 'global'" class="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-2xl text-xs flex items-center gap-3">
-                <i class="fa-solid fa-circle-info text-amber-400 text-lg shrink-0"></i>
-                <span>Estás viendo el <strong>Acumulado Global</strong>. Para editar los números de los partidos, selecciona una jornada en el menú desplegable superior (Ejemplo: Jornada 1).</span>
-            </div>
-
-            <!-- Feedback de guardado -->
-            <div x-show="showSuccessToast" x-transition class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
-                <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> ¡Datos guardados exitosamente en el dispositivo!
-            </div>
-
-            <!-- Tabla de Edición con Botones de Incremento y Decremento -->
-            <div x-show="selectedJornada !== 'global'" class="overflow-x-auto dark-card rounded-2xl border border-zinc-800 shadow-xl">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead class="bg-zinc-950 text-amber-400 uppercase font-greek">
-                        <tr class="border-b border-zinc-800 text-[11px]">
-                            <th class="py-3 px-3">#</th>
-                            <th class="py-3 px-3">Jugador</th>
-                            <th class="py-3 px-3">Dios(a)</th>
-                            <th class="py-3 px-2 text-center text-amber-300 min-w-[140px]">Pases (Comp / Tot)</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Rating QB</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Pases TD</th>
-                            <th class="py-3 px-2 text-center text-amber-300">TD</th>
-                            <th class="py-3 px-2 text-center text-amber-300">Recepción</th>
-                            <th class="py-3 px-2 text-center text-amber-300 border-r border-zinc-800">Pases tirados</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Intercepción</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Empepinada</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Apres. QB</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Sacks</th>
-                            <th class="py-3 px-2 text-center text-amber-200">Tacleada</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-800/60 font-sans">
-                        <template x-for="(p, index) in (jornadasData[selectedJornada] || [])" :key="p.num">
-                            <tr class="hover:bg-zinc-800/40 transition">
-                                <td class="py-2.5 px-3 font-mono font-bold text-amber-400" x-text="'#' + p.num"></td>
-                                <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).name"></td>
-                                <td class="py-2.5 px-3 text-zinc-400 whitespace-nowrap" x-text="(roster.find(r => String(r.num) === String(p.num)) || {}).god"></td>
-                                
-                                <!-- Controles interactivos +/- para Pases Completados e Intentados -->
-                                <td class="p-1 min-w-[140px]">
-                                    <div class="flex flex-col gap-1 items-center justify-center py-1">
-                                        <!-- Completados -->
-                                        <div class="flex items-center" title="Pases Completados">
-                                            <span class="text-[10px] font-bold text-amber-400/90 mr-1.5 w-8 text-right font-greek">Comp:</span>
-                                            <button type="button" @click="decComp(p)" class="w-6 h-6 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-xs border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                            <span class="w-8 bg-zinc-900 text-center font-bold text-amber-300 text-xs py-0.5 border-y border-zinc-700 font-mono" x-text="getComp(p)"></span>
-                                            <button type="button" @click="incComp(p)" class="w-6 h-6 rounded-r gold-gradient text-black font-extrabold text-xs flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                        </div>
-                                        <!-- Intentados Totales -->
-                                        <div class="flex items-center" title="Pases Intentados Totales">
-                                            <span class="text-[10px] font-bold text-zinc-400 mr-1.5 w-8 text-right font-greek">Tot:</span>
-                                            <button type="button" @click="decAtt(p)" class="w-6 h-6 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-xs border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                            <span class="w-8 bg-zinc-900 text-center font-bold text-white text-xs py-0.5 border-y border-zinc-700 font-mono" x-text="getAtt(p)"></span>
-                                            <button type="button" @click="incAtt(p)" class="w-6 h-6 rounded-r gold-gradient text-black font-extrabold text-xs flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <!-- Rating QB Automático -->
-                                <td class="p-1 text-center font-mono font-bold text-amber-400 text-xs" x-text="calcRatingQB(p.passLanzados, p.ratingQB) || '-'"></td>
-                                
-                                <!-- Pases TD con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'pasesTD')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.pasesTD" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'pasesTD')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Touchdowns con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'td')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.td" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'td')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Recepciones con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'recepcion')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.recepcion" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'recepcion')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Pases tirados con botones +/- -->
-                                <td class="p-1 border-r border-zinc-800">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'pasesTirados')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.pasesTirados" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'pasesTirados')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Intercepciones con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'intercepcion')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.intercepcion" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'intercepcion')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Empepinada con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'empepinada')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.empepinada" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'empepinada')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Apresuramiento QB con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'apresuramientoQB')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.apresuramientoQB" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'apresuramientoQB')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Sacks con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'sacks')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.sacks" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'sacks')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-
-                                <!-- Tacleadas con botones +/- -->
-                                <td class="p-1">
-                                    <div class="flex items-center justify-center">
-                                        <button type="button" @click="dec(p, 'tacleada')" class="w-6 h-7 rounded-l bg-zinc-800 hover:bg-zinc-700 text-amber-400 font-extrabold text-sm border border-zinc-700 flex items-center justify-center cursor-pointer select-none active:scale-95 transition">-</button>
-                                        <input type="number" min="0" x-model.number="p.tacleada" class="w-9 bg-zinc-900 text-center font-bold text-white py-1 text-xs border-y border-zinc-700 focus:outline-none">
-                                        <button type="button" @click="inc(p, 'tacleada')" class="w-6 h-7 rounded-r gold-gradient text-black font-extrabold text-sm flex items-center justify-center cursor-pointer select-none active:scale-95 transition">+</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- TAB CUADRO DE HONOR (MVPS) -->
-        <div x-show="currentTab === 'mvp'" class="space-y-8" x-transition>
-            <div class="text-center max-w-xl mx-auto mb-6">
-                <span class="text-amber-400 font-greek text-xs tracking-widest font-extrabold uppercase">Olimpo del Partido</span>
-                <h3 class="font-greek text-2xl sm:text-3xl font-black text-white mt-1" x-text="selectedJornada === 'global' ? 'CUADRO DE HONOR - TEMPORADA GLOBAL' : 'CUADRO DE HONOR - JORNADA ' + selectedJornada"></h3>
-                <p class="text-xs text-zinc-400 mt-1">Reconocimiento a las figuras más destacadas</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- MVP Passer -->
-                <div class="dark-card rounded-3xl p-6 relative group hover:border-amber-500 transition-all duration-300">
-                    <div class="absolute -top-3 right-6 bg-amber-500 text-black font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                        <i class="fa-solid fa-crown mr-1"></i> Líder de Pase
-                    </div>
-                    <div class="w-14 h-14 rounded-2xl gold-gradient flex items-center justify-center text-black text-2xl font-black mb-4 shadow-lg shadow-amber-500/20">
-                        <i class="fa-solid fa-football"></i>
-                    </div>
-                    <span class="text-xs font-bold text-amber-400 font-mono" x-text="'#' + (mvps.passer.num || '')"></span>
-                    <h4 class="text-2xl font-black text-white mt-0.5" x-text="mvps.passer.name || 'Sin registro'"></h4>
-                    <p class="text-xs text-zinc-400 font-greek font-semibold mb-4" x-text="mvps.passer.god || ''"></p>
-                    
-                    <div class="space-y-2 border-t border-zinc-800/80 pt-4 text-xs font-semibold">
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Pases Lanzados:</span>
-                            <span class="font-bold text-amber-400" x-text="mvps.passer.passLanzados || '0'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Pases TD:</span>
-                            <span class="font-bold text-emerald-400" x-text="(mvps.passer.pasesTD || 0) + ' TDs'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Rating QB:</span>
-                            <span class="font-bold text-white font-mono" x-text="formatRating(mvps.passer.ratingQB)"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MVP Scorer -->
-                <div class="dark-card rounded-3xl p-6 relative group hover:border-amber-500 transition-all duration-300">
-                    <div class="absolute -top-3 right-6 bg-amber-500 text-black font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                        <i class="fa-solid fa-bullseye mr-1"></i> Precisión & Anotación
-                    </div>
-                    <div class="w-14 h-14 rounded-2xl gold-gradient flex items-center justify-center text-black text-2xl font-black mb-4 shadow-lg shadow-amber-500/20">
-                        <i class="fa-solid fa-fire"></i>
-                    </div>
-                    <span class="text-xs font-bold text-amber-400 font-mono" x-text="'#' + (mvps.scorer.num || '')"></span>
-                    <h4 class="text-2xl font-black text-white mt-0.5" x-text="mvps.scorer.name || 'Sin registro'"></h4>
-                    <p class="text-xs text-zinc-400 font-greek font-semibold mb-4" x-text="mvps.scorer.god || ''"></p>
-                    
-                    <div class="space-y-2 border-t border-zinc-800/80 pt-4 text-xs font-semibold">
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Anotaciones TD:</span>
-                            <span class="font-bold text-emerald-400" x-text="(mvps.scorer.td || 0) + ' TD'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Recepciones:</span>
-                            <span class="font-bold text-amber-400" x-text="(mvps.scorer.recepcion || 0) + ' Rec'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Total Puntos:</span>
-                            <span class="font-bold text-white font-mono" x-text="((mvps.scorer.td || 0) * 6) + ' pts'"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MVP Defender -->
-                <div class="dark-card rounded-3xl p-6 relative group hover:border-amber-500 transition-all duration-300">
-                    <div class="absolute -top-3 right-6 bg-amber-500 text-black font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                        <i class="fa-solid fa-shield-cat mr-1"></i> Muralla Defensiva
-                    </div>
-                    <div class="w-14 h-14 rounded-2xl gold-gradient flex items-center justify-center text-black text-2xl font-black mb-4 shadow-lg shadow-amber-500/20">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <span class="text-xs font-bold text-amber-400 font-mono" x-text="'#' + (mvps.defender.num || '')"></span>
-                    <h4 class="text-2xl font-black text-white mt-0.5" x-text="mvps.defender.name || 'Sin registro'"></h4>
-                    <p class="text-xs text-zinc-400 font-greek font-semibold mb-4" x-text="mvps.defender.god || ''"></p>
-                    
-                    <div class="space-y-2 border-t border-zinc-800/80 pt-4 text-xs font-semibold">
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Intercepciones (INT):</span>
-                            <span class="font-bold text-purple-400" x-text="(mvps.defender.intercepcion || 0) + ' INT'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Sacks Realizados:</span>
-                            <span class="font-bold text-red-400" x-text="(mvps.defender.sacks || 0) + ' Sacks'"></span>
-                        </div>
-                        <div class="flex justify-between text-zinc-300">
-                            <span>Tacleadas / Apres. QB:</span>
-                            <span class="font-bold text-blue-400" x-text="(mvps.defender.tacleada || 0) + ' / ' + (mvps.defender.apresuramientoQB || 0)"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB TARJETAS DIOSES -->
-        <div x-show="currentTab === 'cards'" class="space-y-6" x-transition>
-            <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
-                <div>
-                    <h3 class="font-greek text-xl font-bold text-amber-400">ROSTER TEAM OLYMPUS</h3>
-                    <p class="text-xs text-zinc-400">Haz clic en la tarjeta de un jugador para ver su reporte detallado</p>
-                </div>
-                <input type="text" x-model="searchQuery" placeholder="Buscar dios o jugador..." class="bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 rounded-xl px-4 py-2 w-full sm:w-64 focus:outline-none focus:border-amber-500">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <template x-for="p in filteredPlayers" :key="p.num">
-                    <div class="dark-card rounded-2xl p-5 hover:border-amber-500 transition-all duration-200 cursor-pointer relative overflow-hidden group" @click="selectedPlayer = p">
-                        
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-mono font-extrabold text-amber-400 text-base group-hover:bg-amber-500 group-hover:text-black transition-colors" x-text="'#' + p.num"></span>
-                            <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 font-greek font-bold" x-text="p.god"></span>
-                        </div>
-                        
-                        <h4 class="font-black text-lg text-white mb-2 group-hover:text-amber-300 transition-colors" x-text="p.name"></h4>
-
-                        <div class="flex flex-wrap gap-1.5 text-[11px]">
-                            <template x-if="hasValue(p.passLanzados)">
-                                <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 font-semibold" x-text="'Pass: ' + p.passLanzados"></span>
-                            </template>
-                            <template x-if="hasValue(p.ratingQB)">
-                                <span class="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-md border border-yellow-500/30 font-semibold" x-text="'Rating QB: ' + formatRating(p.ratingQB)"></span>
-                            </template>
-                            <template x-if="hasValue(p.pasesTD)">
-                                <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30 font-semibold" x-text="'Pases TD: ' + p.pasesTD"></span>
-                            </template>
-                            <template x-if="hasValue(p.td)">
-                                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30 font-semibold" x-text="'TD: ' + p.td"></span>
-                            </template>
-                            <template x-if="hasValue(p.recepcion)">
-                                <span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-md border border-teal-500/30 font-semibold" x-text="'Rec: ' + p.recepcion"></span>
-                            </template>
-                            <template x-if="hasValue(p.pasesTirados)">
-                                <span class="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-md border border-zinc-700 font-semibold" x-text="'P. Tirados: ' + p.pasesTirados"></span>
-                            </template>
-                            <template x-if="hasValue(p.intercepcion)">
-                                <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-md border border-purple-500/30 font-semibold" x-text="'INT: ' + p.intercepcion"></span>
-                            </template>
-                            <template x-if="hasValue(p.empepinada)">
-                                <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-500/30 font-semibold" x-text="'Empepinada: ' + p.empepinada"></span>
-                            </template>
-                            <template x-if="hasValue(p.apresuramientoQB)">
-                                <span class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-md border border-orange-500/30 font-semibold" x-text="'Apres. QB: ' + p.apresuramientoQB"></span>
-                            </template>
-                            <template x-if="hasValue(p.sacks)">
-                                <span class="bg-red-500/20 text-red-300 px-2 py-0.5 rounded-md border border-red-500/30 font-semibold" x-text="'Sacks: ' + p.sacks"></span>
-                            </template>
-                            <template x-if="hasValue(p.tacleada)">
-                                <span class="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-md border border-blue-500/30 font-semibold" x-text="'Tackles: ' + p.tacleada"></span>
-                            </template>
-
-                            <template x-if="!hasAnyStat(p)">
-                                <span class="text-zinc-500 italic text-xs py-0.5">Sin registros</span>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- TAB RESUMEN WHATSAPP -->
-        <div x-show="currentTab === 'whatsapp'" class="max-w-2xl mx-auto space-y-6" x-transition>
-            <div class="dark-card rounded-3xl p-6 sm:p-8 border-amber-500/40 shadow-2xl">
-                <div class="flex items-center gap-4 mb-5 border-b border-zinc-800 pb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-2xl shadow-lg">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-greek font-black text-white text-xl">RESUMEN PARA WHATSAPP</h3>
-                        <p class="text-xs text-zinc-400">Texto formateado para pegar directamente en el grupo del equipo</p>
-                    </div>
-                </div>
-
-                <div class="bg-zinc-950 p-5 rounded-2xl border border-zinc-800 text-xs font-mono text-zinc-200 whitespace-pre-line leading-relaxed select-all shadow-inner" x-text="whatsappText">
-                </div>
-
-                <button @click="copyWhatsAppText()" class="mt-5 w-full gold-gradient text-black font-extrabold py-3.5 rounded-2xl hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 text-sm cursor-pointer">
-                    <i class="fa-solid fa-copy"></i>
-                    <span x-text="copied ? '¡COPIADO AL PORTAPAPELES!' : 'COPIAR TEXTO PARA WHATSAPP'"></span>
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow">
+        
+        <!-- Pestañas de Navegación -->
+        <div class="flex items-center justify-between gap-2 border-b border-zinc-800 pb-3 mb-6 overflow-x-auto">
+            <div class="flex items-center gap-2">
+                <button @click="currentTab = 'table'" :class="currentTab === 'table' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-table-list"></i> Tabla General
                 </button>
+                <button @click="currentTab = 'mvp'" :class="currentTab === 'mvp' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-trophy"></i> Cuadro de Honor
+                </button>
+                <button @click="currentTab = 'edit'" :class="currentTab === 'edit' ? 'gold-gradient text-black font-extrabold shadow-amber-500/20' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-pen-to-square"></i> Cargar / Editar Datos
+                </button>
+            </div>
+
+            <!-- Botón WhatsApp -->
+            <button @click="copyWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-900/40 shrink-0">
+                <i class="fa-brands fa-whatsapp text-lg"></i>
+                <span x-text="copied ? '¡Copiado!' : 'Reporte WhatsApp'"></span>
+            </button>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="mb-4">
+            <div class="relative max-w-md">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+                <input type="text" x-model="searchQuery" placeholder="Buscar por jugador, número o dios..." class="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition">
+            </div>
+        </div>
+
+        <!-- VISTA 1: TABLA GENERAL -->
+        <div x-show="currentTab === 'table'" x-transition class="space-y-4">
+            <div class="dark-card rounded-2xl overflow-hidden shadow-2xl border border-amber-500/20">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-zinc-300">
+                        <thead>
+                            <!-- Encabezados superiores -->
+                            <tr class="text-center font-greek text-[11px] uppercase border-b border-amber-500/30">
+                                <th colspan="3" class="py-2.5 bg-zinc-950 text-amber-400 border-r border-zinc-800">Jugador</th>
+                                <th colspan="5" class="py-2.5 th-offense border-r border-amber-600/40">Ofensa</th>
+                                <th colspan="5" class="py-2.5 th-defense">Defensa</th>
+                            </tr>
+                            <!-- Subencabezados -->
+                            <tr class="bg-zinc-900/90 text-zinc-400 text-[10px] uppercase border-b border-zinc-800 text-center font-bold">
+                                <th class="py-2 px-3 text-left">#</th>
+                                <th class="py-2 px-3 text-left">Nombre</th>
+                                <th class="py-2 px-3 text-left border-r border-zinc-800">Dios</th>
+                                
+                                <!-- Ofensa -->
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Pass</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Rating QB</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">Pass TD</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300">TD</th>
+                                <th class="py-2 px-2 bg-amber-500/10 text-amber-300 border-r border-zinc-800">Rec</th>
+                                
+                                <!-- Defensa -->
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Pass Tirados</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">INT</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Apres. QB</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Sacks</th>
+                                <th class="py-2 px-2 bg-amber-600/10 text-amber-400">Tacleada</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60 font-medium">
+                            <template x-for="p in filteredPlayers" :key="p.num">
+                                <tr class="hover:bg-amber-500/5 transition">
+                                    <td class="py-2.5 px-3 font-extrabold text-amber-400" x-text="'#' + p.num"></td>
+                                    <td class="py-2.5 px-3 font-bold text-white" x-text="p.name"></td>
+                                    <td class="py-2.5 px-3 text-zinc-400 border-r border-zinc-800/60" x-text="p.god"></td>
+                                    
+                                    <!-- Ofensa -->
+                                    <td class="py-2.5 px-2 text-center" :class="hasValue(p.passLanzados) ? 'stat-highlight' : ''" x-text="p.passLanzados || '-'"></td>
+                                    <td class="py-2.5 px-2 text-center font-bold text-amber-300" x-text="formatRating(p.ratingQB)"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTD > 0 ? 'stat-highlight' : ''" x-text="p.pasesTD || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.td > 0 ? 'stat-highlight' : ''" x-text="p.td || 0"></td>
+                                    <td class="py-2.5 px-2 text-center border-r border-zinc-800/60" :class="p.recepcion > 0 ? 'stat-highlight' : ''" x-text="p.recepcion || 0"></td>
+                                    
+                                    <!-- Defensa -->
+                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.pasesTirados || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.intercepcion > 0 ? 'stat-highlight' : ''" x-text="p.intercepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.apresuramientoQB > 0 ? 'stat-highlight' : ''" x-text="p.apresuramientoQB || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.sacks > 0 ? 'stat-highlight' : ''" x-text="p.sacks || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.tacleada > 0 ? 'stat-highlight' : ''" x-text="p.tacleada || 0"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: CUADRO DE HONOR (MVPs) -->
+        <div x-show="currentTab === 'mvp'" x-transition class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Pasar -->
+            <div class="dark-card p-6 rounded-2xl border border-amber-500/40 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-amber-500 text-black font-black text-xs px-3 py-1 rounded-bl-xl uppercase font-greek">Líder de Pase</div>
+                <div class="text-4xl mb-2">🏈</div>
+                <h3 class="font-greek font-extrabold text-xl text-white mb-1" x-text="mvps.passer.name || 'N/A'"></h3>
+                <p class="text-xs text-amber-400 font-bold mb-4" x-text="'#' + (mvps.passer.num || '-') + ' • ' + (mvps.passer.god || '-')"></p>
+                
+                <div class="space-y-2 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800 text-xs">
+                    <div class="flex justify-between"><span class="text-zinc-400">Pases Lanzados:</span> <span class="font-bold text-white" x-text="mvps.passer.passLanzados || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Pases de TD:</span> <span class="font-extrabold text-amber-400" x-text="mvps.passer.pasesTD || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Rating QB:</span> <span class="font-extrabold text-amber-300" x-text="formatRating(mvps.passer.ratingQB)"></span></div>
+                </div>
+            </div>
+
+            <!-- Anotador -->
+            <div class="dark-card p-6 rounded-2xl border border-amber-500/40 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-amber-500 text-black font-black text-xs px-3 py-1 rounded-bl-xl uppercase font-greek">Anotador Principal</div>
+                <div class="text-4xl mb-2">🎯</div>
+                <h3 class="font-greek font-extrabold text-xl text-white mb-1" x-text="mvps.scorer.name || 'N/A'"></h3>
+                <p class="text-xs text-amber-400 font-bold mb-4" x-text="'#' + (mvps.scorer.num || '-') + ' • ' + (mvps.scorer.god || '-')"></p>
+                
+                <div class="space-y-2 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800 text-xs">
+                    <div class="flex justify-between"><span class="text-zinc-400">Touchdowns (TD):</span> <span class="font-extrabold text-amber-400" x-text="mvps.scorer.td || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Recepciones:</span> <span class="font-bold text-white" x-text="mvps.scorer.recepcion || 0"></span></div>
+                </div>
+            </div>
+
+            <!-- Defensa -->
+            <div class="dark-card p-6 rounded-2xl border border-amber-500/40 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-amber-500 text-black font-black text-xs px-3 py-1 rounded-bl-xl uppercase font-greek">Muralla Defensiva</div>
+                <div class="text-4xl mb-2">🛡️</div>
+                <h3 class="font-greek font-extrabold text-xl text-white mb-1" x-text="mvps.defender.name || 'N/A'"></h3>
+                <p class="text-xs text-amber-400 font-bold mb-4" x-text="'#' + (mvps.defender.num || '-') + ' • ' + (mvps.defender.god || '-')"></p>
+                
+                <div class="space-y-2 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800 text-xs">
+                    <div class="flex justify-between"><span class="text-purple-400 font-bold">Intercepciones (INT):</span> <span class="font-extrabold text-purple-400" x-text="mvps.defender.intercepcion || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Sacks:</span> <span class="font-extrabold text-amber-400" x-text="mvps.defender.sacks || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Tackles:</span> <span class="font-bold text-white" x-text="mvps.defender.tacleada || 0"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Apresuramientos QB:</span> <span class="font-bold text-white" x-text="mvps.defender.apresuramientoQB || 0"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: CARGAR / EDITAR DATOS -->
+        <div x-show="currentTab === 'edit'" x-transition class="space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="font-greek text-lg font-bold text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-sm"></i> Captura de Datos (Requiere PIN Coach)
+                </h2>
+                <button @click="guardarCambiosCoach()" class="gold-gradient text-black font-extrabold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Guardar Cambios en la Nube
+                </button>
+            </div>
+
+            <div class="dark-card rounded-2xl overflow-hidden shadow-2xl border border-amber-500/20">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-zinc-300">
+                        <thead>
+                            <tr class="bg-zinc-900/90 text-zinc-400 text-[10px] uppercase border-b border-zinc-800 text-center font-bold">
+                                <th class="py-2 px-3 text-left">#</th>
+                                <th class="py-2 px-3 text-left">Jugador</th>
+                                <th class="py-2 px-2">Pases (Comp / Tot)</th>
+                                <th class="py-2 px-2">Pases TD</th>
+                                <th class="py-2 px-2">TD</th>
+                                <th class="py-2 px-2">Rec</th>
+                                <th class="py-2 px-2">Pases Tirados</th>
+                                <th class="py-2 px-2">INT</th>
+                                <th class="py-2 px-2">Apres. QB</th>
+                                <th class="py-2 px-2">Sacks</th>
+                                <th class="py-2 px-2">Tacleada</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60">
+                            <template x-for="p in (jornadasData[selectedJornada] || [])" :key="p.num">
+                                <tr class="hover:bg-zinc-900/40">
+                                    <td class="py-2 px-3 font-extrabold text-amber-400" x-text="'#' + p.num"></td>
+                                    <td class="py-2 px-3 font-bold text-white" x-text="roster.find(r => String(r.num) === String(p.num))?.name || ''"></td>
+                                    
+                                    <!-- Controles Comp/Tot pases -->
+                                    <td class="py-2 px-2">
+                                        <div class="flex flex-col gap-1 items-center justify-center min-w-[130px]">
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[9px] text-amber-400 font-bold uppercase w-8 text-right">Comp:</span>
+                                                <button @click="decComp(p)" class="w-6 h-6 rounded bg-zinc-800 hover:bg-zinc-700 text-white font-black text-xs flex items-center justify-center border border-zinc-700">-</button>
+                                                <span class="w-6 text-center font-bold text-white text-xs" x-text="getComp(p)"></span>
+                                                <button @click="incComp(p)" class="w-6 h-6 rounded bg-amber-500 hover:bg-amber-400 text-black font-black text-xs flex items-center justify-center">+</button>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[9px] text-zinc-400 font-bold uppercase w-8 text-right">Tot:</span>
+                                                <button @click="decAtt(p)" class="w-6 h-6 rounded bg-zinc-800 hover:bg-zinc-700 text-white font-black text-xs flex items-center justify-center border border-zinc-700">-</button>
+                                                <span class="w-6 text-center font-bold text-zinc-300 text-xs" x-text="getAtt(p)"></span>
+                                                <button @click="incAtt(p)" class="w-6 h-6 rounded bg-zinc-700 hover:bg-zinc-600 text-white font-black text-xs flex items-center justify-center">+</button>
+                                            </div>
+                                            <span class="text-[10px] font-bold text-amber-300 mt-0.5" x-text="'Rating: ' + calcRatingQB(p.passLanzados)"></span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Campos Numéricos con Incrementar/Decrementar -->
+                                    <template x-for="field in ['pasesTD', 'td', 'recepcion', 'pasesTirados', 'intercepcion', 'apresuramientoQB', 'sacks', 'tacleada']">
+                                        <td class="py-2 px-1 text-center">
+                                            <div class="flex items-center justify-center gap-1">
+                                                <button @click="dec(p, field)" class="w-6 h-6 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs border border-zinc-700">-</button>
+                                                <input type="number" x-model.number="p[field]" min="0" class="w-10 bg-zinc-950 border border-zinc-800 rounded text-center py-1 text-xs text-white font-bold focus:outline-none focus:border-amber-500">
+                                                <button @click="inc(p, field)" class="w-6 h-6 rounded bg-amber-500/20 hover:bg-amber-500 text-amber-400 hover:text-black font-bold text-xs border border-amber-500/40">+</button>
+                                            </div>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal Ficha de Jugador -->
-    <div x-show="selectedPlayer" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" x-transition style="display: none;">
-        <div @click.away="selectedPlayer = null" class="dark-card rounded-3xl p-6 max-w-md w-full relative border-amber-500/50 shadow-2xl">
-            <button @click="selectedPlayer = null" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-700">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <template x-if="selectedPlayer">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl gold-gradient text-black flex items-center justify-center font-mono font-black text-xl shadow-lg">
-                            <span x-text="'#' + selectedPlayer.num"></span>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-black text-white" x-text="selectedPlayer.name"></h3>
-                            <span class="text-xs text-amber-400 font-greek font-bold" x-text="selectedPlayer.god"></span>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-zinc-800 pt-4">
-                        <h4 class="text-xs font-bold uppercase text-amber-400 font-greek mb-3">Resumen de Atributos</h4>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Pases Lanzados:</span>
-                                <span class="font-bold text-white" x-text="selectedPlayer.passLanzados || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Rating QB:</span>
-                                <span class="font-bold text-amber-400" x-text="formatRating(selectedPlayer.ratingQB)"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Pases TD:</span>
-                                <span class="font-bold text-emerald-400" x-text="selectedPlayer.pasesTD || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Touchdowns:</span>
-                                <span class="font-bold text-emerald-400" x-text="selectedPlayer.td || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Recepciones:</span>
-                                <span class="font-bold text-teal-400" x-text="selectedPlayer.recepcion || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Intercepciones:</span>
-                                <span class="font-bold text-purple-400" x-text="selectedPlayer.intercepcion || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Sacks:</span>
-                                <span class="font-bold text-red-400" x-text="selectedPlayer.sacks || 0"></span>
-                            </div>
-                            <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex justify-between">
-                                <span class="text-zinc-400">Tacleadas:</span>
-                                <span class="font-bold text-blue-400" x-text="selectedPlayer.tacleada || 0"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
-
     <!-- Footer -->
-    <footer class="border-t border-zinc-800 py-6 text-center text-xs text-zinc-500 bg-zinc-950">
-        <p class="font-greek">TEAM OLYMPUS FLAG FOOTBALL &copy; 2026 • TODOS LOS DERECHOS RESERVADOS</p>
+    <footer class="border-t border-zinc-800/80 bg-zinc-950 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xs text-zinc-500 font-medium">
+                © 2026 <span class="text-amber-400 font-bold font-greek">Team Olympus</span> • Flag Football Statistics Hub
+            </p>
+        </div>
     </footer>
 
 </body>
