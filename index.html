@@ -39,7 +39,7 @@
         // Inicializar Firebase
         let db = null;
         try {
-            if (firebaseConfig.apiKey !== "AIzaSyAKkPPSTv6ID6dnjaVLMQ7BA7MRWJrFT2U" ) {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "") {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
             }
@@ -49,6 +49,10 @@
     </script>
 
     <style>
+        [x-cloak] { 
+            display: none !important; 
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: #09090b;
@@ -756,12 +760,13 @@
                                     <td class="py-2.5 px-2 text-center font-bold text-amber-300" x-text="formatRating(p.ratingQB)"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.pasesTD > 0 ? 'stat-highlight' : ''" x-text="p.pasesTD || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.td > 0 ? 'stat-highlight' : ''" x-text="p.td || 0"></td>
-                                    <td class="py-2.5 px-2 text-center border-r border-zinc-800/60" :class="p.recepcion > 0 ? 'stat-highlight' : ''" x-text="p.recepcion || 0"></td>
-                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.pasesTirados || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.recepcion > 0 ? 'stat-highlight' : ''" x-text="p.recepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center border-r border-zinc-800/60" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.pasesTirados || 0"></td>
+                                    
                                     
                                     <!-- Defensa -->
-                                    <td class="py-2.5 px-2 text-center" :class="p.pasesTirados > 0 ? 'stat-highlight' : ''" x-text="p.intercepcion || 0"></td>
-                                    <td class="py-2.5 px-2 text-center" :class="p.intercepcion > 0 ? 'stat-highlight' : ''" x-text="p.empepinada || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.intercepcion > 0 ? 'stat-highlight' : ''" x-text="p.intercepcion || 0"></td>
+                                    <td class="py-2.5 px-2 text-center" :class="p.empepinada > 0 ? 'stat-highlight' : ''" x-text="p.empepinada || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.apresuramientoQB > 0 ? 'stat-highlight' : ''" x-text="p.apresuramientoQB || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.sacks > 0 ? 'stat-highlight' : ''" x-text="p.sacks || 0"></td>
                                     <td class="py-2.5 px-2 text-center" :class="p.tacleada > 0 ? 'stat-highlight' : ''" x-text="p.tacleada || 0"></td>
@@ -939,7 +944,7 @@
                                     </td>
 
                                     <!-- Campos Numéricos con Incrementar/Decrementar -->
-                                    <template x-for="field in ['pasesTD', 'td', 'recepcion', 'pasesTirados', 'intercepcion', 'apresuramientoQB', 'sacks', 'tacleada']">
+                                    <template x-for="field in ['pasesTD', 'td', 'recepcion', 'pasesTirados', 'intercepcion', 'empepinada', 'apresuramientoQB', 'sacks', 'tacleada']">
                                         <td class="py-2 px-1 text-center">
                                             <div class="flex items-center justify-center gap-1">
                                                 <button @click="dec(p, field)" class="w-6 h-6 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs border border-zinc-700">-</button>
@@ -957,7 +962,110 @@
         </div>
 
     </main>
+    <!-- MODAL FICHA DETALLADA DE JUGADOR -->
+    <div x-show="selectedPlayer !== null" 
+        x-transition:enter="transition ease-out duration-200" 
+        x-transition:enter-start="opacity-0" 
+        x-transition:enter-end="opacity-100" 
+        x-transition:leave="transition ease-in duration-150" 
+        x-transition:leave-start="opacity-100" 
+        x-transition:leave-end="opacity-0" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" 
+        @click.self="selectedPlayer = null" 
+        x-cloak>
+        
+        <div class="dark-card rounded-2xl max-w-md w-full p-6 relative border border-amber-500/40 shadow-2xl" @click.stop>
+            
+            <!-- Botón Cerrar -->
+            <button @click="selectedPlayer = null" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
 
+            <!-- Encabezado del Jugador -->
+            <div class="flex items-center gap-4 mb-6 border-b border-zinc-800 pb-4">
+                <span class="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center font-mono font-black text-black text-2xl shadow-lg shadow-amber-500/20" x-text="'#' + selectedPlayer?.num"></span>
+                <div>
+                    <h3 class="font-black text-2xl text-white" x-text="selectedPlayer?.name"></h3>
+                    <p class="text-xs text-amber-400 font-greek font-bold uppercase tracking-widest" x-text="'Dios: ' + selectedPlayer?.god"></p>
+                </div>
+            </div>
+
+            <!-- Cuerpo de Estadísticas -->
+            <div class="space-y-4">
+                
+                <!-- Seccion Ofensa -->
+                <div>
+                    <h4 class="text-[11px] font-bold font-greek uppercase text-amber-400 mb-2 flex items-center gap-1.5 border-b border-amber-500/20 pb-1">
+                        <i class="fa-solid fa-football"></i> Estadísticas de Ofensa
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Pases:</span>
+                            <span class="font-bold text-white" x-text="selectedPlayer?.passLanzados || '0'"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Rating QB:</span>
+                            <span class="font-bold text-amber-300" x-text="formatRating(selectedPlayer?.ratingQB)"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Pases TD:</span>
+                            <span class="font-bold text-amber-400" x-text="selectedPlayer?.pasesTD || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Touchdowns:</span>
+                            <span class="font-bold text-emerald-400" x-text="selectedPlayer?.td || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Recepciones:</span>
+                            <span class="font-bold text-teal-400" x-text="selectedPlayer?.recepcion || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">P. Tirados:</span>
+                            <span class="font-bold text-zinc-300" x-text="selectedPlayer?.pasesTirados || 0"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seccion Defensa -->
+                <div>
+                    <h4 class="text-[11px] font-bold font-greek uppercase text-amber-400 mb-2 flex items-center gap-1.5 border-b border-amber-500/20 pb-1">
+                        <i class="fa-solid fa-shield-halved"></i> Estadísticas de Defensa
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">INTs:</span>
+                            <span class="font-bold text-purple-400" x-text="selectedPlayer?.intercepcion || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Empepinadas:</span>
+                            <span class="font-bold text-indigo-400" x-text="selectedPlayer?.empepinada || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Apres. QB:</span>
+                            <span class="font-bold text-orange-400" x-text="selectedPlayer?.apresuramientoQB || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between">
+                            <span class="text-zinc-400">Sacks:</span>
+                            <span class="font-bold text-red-400" x-text="selectedPlayer?.sacks || 0"></span>
+                        </div>
+                        <div class="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 flex justify-between col-span-2">
+                            <span class="text-zinc-400">Tackles:</span>
+                            <span class="font-bold text-blue-400" x-text="selectedPlayer?.tacleada || 0"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Botón Cierre -->
+            <div class="mt-6 pt-3 border-t border-zinc-800 flex justify-end">
+                <button @click="selectedPlayer = null" class="gold-gradient text-black font-extrabold text-xs px-5 py-2 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition">
+                    Cerrar Ficha
+                </button>
+            </div>
+
+        </div>
+    </div>
     <!-- Footer -->
     <footer class="border-t border-zinc-800/80 bg-zinc-950 py-4 mt-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
